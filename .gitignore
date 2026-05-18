@@ -41,6 +41,10 @@ yarn-error.log*
 
 # capacitor / android local (generado por cap add android)
 /android
+*.apk
+
+# build outputs locales
+/Pulsar-debug.apk
 
 # vercel
 .vercel
