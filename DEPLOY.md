@@ -91,6 +91,7 @@ También puedes usar [UptimeRobot](https://uptimerobot.com) (gratis) apuntando a
 
 ## Notas
 
-- El plan **free** de Render puede tardar ~30 s en el primer acceso tras despertar; con keep-alive suele quedar casi siempre activo.
+- **Plan free:** Render **no permite disco persistente**. El blueprint usa SQLite en `./data/` dentro del contenedor; los datos **se reinician** en cada redeploy. Para BD permanente: plan de pago + disco en `render.yaml`, o PostgreSQL (Render DB free).
+- El plan **free** puede tardar ~30 s en el primer acceso tras despertar; con keep-alive suele quedar casi siempre activo.
 - Para producción seria: plan de pago en Render o VPS (Railway, Fly.io, DigitalOcean).
 - No subas `.env.local` a Git (ya está en `.gitignore`).

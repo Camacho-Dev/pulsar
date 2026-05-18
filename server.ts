@@ -1,6 +1,8 @@
 import "dotenv/config";
 import { execSync } from "child_process";
+import { mkdirSync } from "fs";
 import { createServer } from "http";
+import path from "path";
 import next from "next";
 import { initSocketServer } from "./src/lib/socket-server";
 
@@ -17,6 +19,11 @@ if (dev) {
   }
 } else {
   try {
+    const dbUrl = process.env.DATABASE_URL ?? "";
+    const match = dbUrl.match(/^file:(.+)$/);
+    if (match?.[1]) {
+      mkdirSync(path.dirname(path.resolve(match[1])), { recursive: true });
+    }
     execSync("npx prisma db push", { stdio: "pipe" });
     execSync("npx tsx prisma/seed.ts", { stdio: "pipe" });
   } catch {

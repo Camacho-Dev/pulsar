@@ -15,9 +15,10 @@ RUN npm run build
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=3000
-ENV DATABASE_URL=file:/data/pulsar.db
+ENV DATABASE_URL=file:./data/pulsar.db
+
+RUN mkdir -p /app/data
 
 EXPOSE 3000
-VOLUME ["/data"]
 
 CMD ["npm", "start"]

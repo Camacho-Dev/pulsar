@@ -10,10 +10,7 @@ services:
     branch: main
     healthCheckPath: /login
     autoDeploy: true
-    disk:
-      name: pulsar-data
-      mountPath: /data
-      sizeGB: 1
+    # Plan free: sin disco persistente (Render no lo permite). SQLite en ./data/ (efímero al redesplegar).
     envVars:
       - key: NODE_ENV
         value: production
@@ -22,7 +19,7 @@ services:
       - key: PORT
         value: "3000"
       - key: DATABASE_URL
-        value: file:/data/pulsar.db
+        value: file:./data/pulsar.db
       - key: AUTH_SECRET
         generateValue: true
       - key: AUTH_URL

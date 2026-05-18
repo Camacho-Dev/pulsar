@@ -37,6 +37,7 @@ yarn-error.log*
 # sqlite local
 /prisma/*.db
 /prisma/*.db-journal
+/data/
 
 # capacitor / android local
 /android
