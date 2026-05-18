@@ -151,6 +151,9 @@ export function LivingMap({
         onError={() =>
           setMapError("No se pudieron cargar las calles del mapa.")
         }
+        onLoad={(e) => {
+          e.target.resize();
+        }}
         initialViewState={{
           longitude: center.lng,
           latitude: center.lat,

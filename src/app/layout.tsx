@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { MapboxConfigProvider } from "@/components/providers/mapbox-config-provider";
 import { SessionProvider } from "@/components/providers/session-provider";
 import "./globals.css";
 
@@ -23,13 +24,17 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
+
   return (
     <html lang="es" className="dark" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        <SessionProvider>{children}</SessionProvider>
+        <MapboxConfigProvider token={mapboxToken}>
+          <SessionProvider>{children}</SessionProvider>
+        </MapboxConfigProvider>
       </body>
     </html>
   );
