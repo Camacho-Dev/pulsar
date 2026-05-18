@@ -268,15 +268,6 @@ export default function PulsePage() {
       });
   }, [pickup, destination, previewDest]);
 
-  async function saveAmbiance(a: Ambiance) {
-    setAmbiance(a);
-    await fetch("/api/profile/ambiance", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ambiance: a }),
-    });
-  }
-
   function hasActiveTrip() {
     return (
       movement != null &&
@@ -357,7 +348,6 @@ export default function PulsePage() {
     }
 
     setSyncing(true);
-    await saveAmbiance(payload.ambiance);
 
     const res =
       checkoutKind === "pulse" && pendingPulseId

@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Map, { Layer, MapRef, Marker, Source } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { useMapboxToken } from "@/hooks/use-mapbox-token";
 import { DEFAULT_CENTER } from "@/lib/constants";
-import { hasMapboxToken, MAPBOX_STYLE, MAPBOX_TOKEN } from "@/lib/mapbox";
+import { MAPBOX_STYLE } from "@/lib/mapbox";
 import { ZONE_COLORS, ZONE_LABELS, cn } from "@/lib/utils";
 
 export type LiveZone = {
@@ -48,6 +49,8 @@ export function LivingMap({
   className,
 }: LivingMapProps) {
   const mapRef = useRef<MapRef>(null);
+  const { token, loading: tokenLoading, ready } = useMapboxToken();
+  const [mapError, setMapError] = useState<string | null>(null);
   const [zones, setZones] = useState<LiveZone[]>([]);
   const center = userPosition ?? DEFAULT_CENTER;
 
@@ -81,15 +84,54 @@ export function LivingMap({
     });
   }, [userPosition, destination]);
 
-  if (!hasMapboxToken()) {
+  useEffect(() => {
+    if (!ready) return;
+    mapRef.current?.getMap()?.resize();
+  }, [ready, token]);
+
+  if (tokenLoading) {
     return (
       <div
         className={cn(
-          "flex min-h-[280px] items-center justify-center rounded-2xl border border-white/10 bg-[#0a0e17] p-6 text-center text-sm text-violet-300",
+          "flex min-h-[280px] items-center justify-center rounded-2xl border border-white/10 bg-[#0a0e17] text-sm text-zinc-500",
           className
         )}
       >
-        Mapa no disponible. Contacta al administrador de la app.
+        Cargando mapa…
+      </div>
+    );
+  }
+
+  if (!ready) {
+    return (
+      <div
+        className={cn(
+          "flex min-h-[280px] flex-col items-center justify-center gap-2 rounded-2xl border border-amber-500/30 bg-[#0a0e17] p-6 text-center text-sm text-amber-200",
+          className
+        )}
+      >
+        <p>Mapbox no configurado en el servidor.</p>
+        <p className="text-xs text-zinc-500">
+          Render → Environment →{" "}
+          <code className="text-violet-300">NEXT_PUBLIC_MAPBOX_TOKEN</code> y
+          redeploy.
+        </p>
+      </div>
+    );
+  }
+
+  if (mapError) {
+    return (
+      <div
+        className={cn(
+          "flex min-h-[280px] flex-col items-center justify-center gap-2 rounded-2xl border border-red-500/30 bg-[#0a0e17] p-6 text-center text-sm text-red-300",
+          className
+        )}
+      >
+        <p>{mapError}</p>
+        <p className="text-xs text-zinc-500">
+          Revisa el token en Mapbox y permisos de URL para Render.
+        </p>
       </div>
     );
   }
@@ -102,9 +144,13 @@ export function LivingMap({
       )}
     >
       <Map
+        key={token}
         ref={mapRef}
-        mapboxAccessToken={MAPBOX_TOKEN}
+        mapboxAccessToken={token}
         mapStyle={MAPBOX_STYLE}
+        onError={() =>
+          setMapError("No se pudieron cargar las calles del mapa.")
+        }
         initialViewState={{
           longitude: center.lng,
           latitude: center.lat,

@@ -4,8 +4,9 @@ import { useEffect, useMemo, useRef } from "react";
 import Map, { Layer, MapRef, Marker, Source } from "react-map-gl/mapbox";
 import { Car } from "lucide-react";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { useMapboxToken } from "@/hooks/use-mapbox-token";
 import { DEFAULT_CENTER } from "@/lib/geo";
-import { hasMapboxToken, MAPBOX_STYLE, MAPBOX_TOKEN } from "@/lib/mapbox";
+import { MAPBOX_STYLE } from "@/lib/mapbox";
 
 export type MapMarker = {
   id: string;
@@ -87,6 +88,7 @@ export function RideMap({
   className,
 }: RideMapProps) {
   const mapRef = useRef<MapRef>(null);
+  const { token, loading: tokenLoading, ready } = useMapboxToken();
   const center = pickup ?? DEFAULT_CENTER;
 
   const route = useMemo(() => {
@@ -129,7 +131,17 @@ export function RideMap({
     }
   }, [pickup, dropoff, routeCoordinates, nearbyDrivers, passengerRequests]);
 
-  if (!hasMapboxToken()) {
+  if (tokenLoading) {
+    return (
+      <div
+        className={`flex min-h-[200px] items-center justify-center rounded-2xl bg-zinc-900 text-sm text-zinc-500 ${className ?? ""}`}
+      >
+        Cargando mapa…
+      </div>
+    );
+  }
+
+  if (!ready) {
     return (
       <div
         className={`flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-violet-500/40 bg-zinc-900 p-6 text-center ${className ?? ""}`}
@@ -142,8 +154,9 @@ export function RideMap({
   return (
     <div className={className}>
       <Map
+        key={token}
         ref={mapRef}
-        mapboxAccessToken={MAPBOX_TOKEN}
+        mapboxAccessToken={token}
         mapStyle={MAPBOX_STYLE}
         initialViewState={{
           longitude: center.lng,

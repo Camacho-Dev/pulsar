@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Bell, Music2, Thermometer } from "lucide-react";
-import { AmbiancePicker } from "@/components/pulsar/ambiance-picker";
 import { SettingsShell } from "@/components/pulsar/settings-shell";
 import { useMoverProfile } from "@/hooks/use-mover-profile";
-import { AMBIANCE_LABELS } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 const DRIVING_STYLES = [
@@ -46,24 +44,6 @@ export default function PreferenciasSettingsPage() {
                 className="h-5 w-5 rounded accent-violet-500"
               />
             </label>
-          </section>
-
-          <section className="glass rounded-2xl p-4">
-            <h2 className="text-sm font-semibold text-white">
-              Ambiente por defecto
-            </h2>
-            <p className="mt-1 text-xs text-zinc-500">
-              Al confirmar viaje, paso final del checkout.
-            </p>
-            <div className="mt-3">
-              <AmbiancePicker
-                value={profile.preferredAmbiance}
-                onChange={(a) => void patch({ preferredAmbiance: a })}
-              />
-            </div>
-            <p className="mt-2 text-xs text-zinc-600">
-              Actual: {AMBIANCE_LABELS[profile.preferredAmbiance]}
-            </p>
           </section>
 
           <section className="glass rounded-2xl p-4">
