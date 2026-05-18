@@ -5,7 +5,7 @@ import { quickEtaMinutes } from "@/services/eta.service";
 import { upsertPilotLocation } from "@/lib/pilot-geo";
 import { prisma } from "@/lib/prisma";
 import { MovementEvents } from "@/core/events";
-import { addTripMessage } from "@/lib/trip-chat-store";
+import { addTripMessage } from "@/lib/trip-chat";
 import { userParticipatesInMovement } from "@/lib/movement-access";
 import type { PilotLocation } from "./socket-types";
 
@@ -130,7 +130,7 @@ export function initSocketServer(httpServer: HttpServer) {
         );
         if (!role) return;
 
-        const msg = addTripMessage({
+        const msg = await addTripMessage({
           movementId: payload.movementId,
           senderId: userId,
           senderRole: role,

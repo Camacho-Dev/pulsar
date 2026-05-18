@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { MapboxConfigProvider } from "@/components/providers/mapbox-config-provider";
+import { PushRegistrationMount } from "@/components/providers/push-registration-mount";
 import { SessionProvider } from "@/components/providers/session-provider";
 import "./globals.css";
 
@@ -33,7 +34,10 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <MapboxConfigProvider token={mapboxToken}>
-          <SessionProvider>{children}</SessionProvider>
+          <SessionProvider>
+            <PushRegistrationMount />
+            {children}
+          </SessionProvider>
         </MapboxConfigProvider>
       </body>
     </html>

@@ -20,6 +20,17 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "No es pilot" }, { status: 403 });
   }
 
+  if (isOnline !== false && profile.approvalStatus !== "APPROVED") {
+    return NextResponse.json(
+      {
+        error:
+          "Tu cuenta de conductor debe estar aprobada. Completa placa y licencia en Vehiculo.",
+        approvalStatus: profile.approvalStatus,
+      },
+      { status: 403 }
+    );
+  }
+
   await prisma.pilotProfile.update({
     where: { userId: session.user.id },
     data: {

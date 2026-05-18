@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Car } from "lucide-react";
+import { Car, ShieldCheck } from "lucide-react";
 import type { CarServiceTier } from "@/lib/car-services";
 import { SettingsShell } from "@/components/pulsar/settings-shell";
 import { usePilotProfile } from "@/hooks/use-pilot-profile";
@@ -12,14 +12,20 @@ import { cn } from "@/lib/utils";
 export default function PilotVehiculoPage() {
   const { profile, loading, saving, patch } = usePilotProfile();
   const [vehicleModel, setVehicleModel] = useState("");
+  const [licensePlate, setLicensePlate] = useState("");
+  const [licenseNumber, setLicenseNumber] = useState("");
+  const [vehicleColor, setVehicleColor] = useState("");
   const [tiers, setTiers] = useState<CarServiceTier[]>([]);
 
   useEffect(() => {
     if (profile) {
       setVehicleModel(profile.vehicleType);
+      setLicensePlate(profile.licensePlate ?? "");
+      setLicenseNumber(profile.licenseNumber ?? "");
+      setVehicleColor(profile.vehicleColor ?? "");
       setTiers(profile.serviceTiers ?? []);
     }
-  }, [profile?.vehicleType, profile?.serviceTiers]);
+  }, [profile]);
 
   function toggleTier(id: CarServiceTier) {
     setTiers((prev) => {
@@ -40,6 +46,79 @@ export default function PilotVehiculoPage() {
         <p className="text-sm text-zinc-500">Cargando...</p>
       ) : (
         <div className="space-y-4">
+          <section className="glass rounded-2xl p-4">
+            <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-white">
+              <ShieldCheck className="h-4 w-4 text-cyan-400" />
+              Registro de conductor
+            </h2>
+            <p
+              className={cn(
+                "mb-3 rounded-lg px-3 py-2 text-xs",
+                profile.approvalStatus === "APPROVED"
+                  ? "bg-emerald-500/15 text-emerald-300"
+                  : profile.approvalStatus === "REJECTED"
+                    ? "bg-red-500/15 text-red-300"
+                    : "bg-amber-500/15 text-amber-200"
+              )}
+            >
+              {profile.approvalStatus === "APPROVED"
+                ? "Cuenta aprobada — puedes conectarte y recibir viajes."
+                : profile.approvalStatus === "REJECTED"
+                  ? "Registro rechazado. Contacta soporte."
+                  : "Pendiente de revision. Completa placa y licencia."}
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block text-xs text-zinc-500">
+                Placa
+                <input
+                  type="text"
+                  value={licensePlate}
+                  disabled={saving}
+                  onChange={(e) => setLicensePlate(e.target.value)}
+                  onBlur={() => {
+                    if (licensePlate !== (profile.licensePlate ?? "")) {
+                      void patch({ licensePlate });
+                    }
+                  }}
+                  placeholder="A123456"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"
+                />
+              </label>
+              <label className="block text-xs text-zinc-500">
+                Licencia
+                <input
+                  type="text"
+                  value={licenseNumber}
+                  disabled={saving}
+                  onChange={(e) => setLicenseNumber(e.target.value)}
+                  onBlur={() => {
+                    if (licenseNumber !== (profile.licenseNumber ?? "")) {
+                      void patch({ licenseNumber });
+                    }
+                  }}
+                  placeholder="402-0000000-0"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"
+                />
+              </label>
+              <label className="block text-xs text-zinc-500 sm:col-span-2">
+                Color del vehiculo
+                <input
+                  type="text"
+                  value={vehicleColor}
+                  disabled={saving}
+                  onChange={(e) => setVehicleColor(e.target.value)}
+                  onBlur={() => {
+                    if (vehicleColor !== (profile.vehicleColor ?? "")) {
+                      void patch({ vehicleColor });
+                    }
+                  }}
+                  placeholder="Ej. Blanco perla"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"
+                />
+              </label>
+            </div>
+          </section>
+
           <section className="glass rounded-2xl p-4">
             <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-white">
               <Car className="h-4 w-4 text-violet-400" />

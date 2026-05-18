@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { emitChatMessage } from "@/lib/socket-server";
-import { addTripMessage, listTripMessages } from "@/lib/trip-chat-store";
+import { addTripMessage, listTripMessages } from "@/lib/trip-chat";
 import { userParticipatesInMovement } from "@/lib/movement-access";
 
 export async function GET(
@@ -19,7 +19,8 @@ export async function GET(
     return NextResponse.json({ error: "Viaje no encontrado" }, { status: 404 });
   }
 
-  return NextResponse.json(listTripMessages(id));
+  const messages = await listTripMessages(id);
+  return NextResponse.json(messages);
 }
 
 export async function POST(
@@ -42,7 +43,7 @@ export async function POST(
     return NextResponse.json({ error: "Mensaje vacio" }, { status: 400 });
   }
 
-  const msg = addTripMessage({
+  const msg = await addTripMessage({
     movementId: id,
     senderId: session.user.id,
     senderRole: role,

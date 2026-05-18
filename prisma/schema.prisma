@@ -46,6 +46,12 @@ enum ZoneType {
   FLOW
 }
 
+enum PilotApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum StopType {
   PICKUP_FRIEND
   DETOUR
@@ -68,6 +74,8 @@ model User {
   pilotMoves   Movement[]        @relation("PilotMovements")
   suggestions  PulseSuggestion[]
   ratingsGiven MovementRating[]  @relation("RatingsGiven")
+  pushTokens   DevicePushToken[]
+  chatMessages TripChatMessage[]
 }
 
 model MoverProfile {
@@ -81,24 +89,29 @@ model MoverProfile {
 }
 
 model PilotProfile {
-  userId       String  @id
-  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  avatarEnergy String  @default("calm")
-  vehicleType  String  @default("Sedán")
-  transportMode TransportMode @default(CAR)
+  userId          String              @id
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  avatarEnergy    String              @default("calm")
+  vehicleType     String              @default("Sedán")
+  transportMode   TransportMode       @default(CAR)
   /** JSON array de tiers CAR que ofrece: PULSAR, CONFORT, SELECT, BLACK */
-  serviceTiers String  @default("[\"PULSAR\",\"CONFORT\",\"SELECT\",\"BLACK\"]")
-  auraScore    Float   @default(4.5)
-  isOnline     Boolean @default(false)
-  lat          Float?
-  lng          Float?
-  h3Cell       String?
-  punctuality  Float   @default(5)
-  smoothness   Float   @default(5)
-  ambianceFit  Float   @default(5)
-  safety       Float   @default(5)
-  cleanliness  Float   @default(5)
-  conversation Float   @default(5)
+  serviceTiers    String              @default("[\"PULSAR\",\"CONFORT\",\"SELECT\",\"BLACK\"]")
+  licensePlate    String?
+  licenseNumber   String?
+  vehicleColor    String?
+  approvalStatus  PilotApprovalStatus @default(PENDING)
+  onboardingNotes String?
+  auraScore       Float               @default(4.5)
+  isOnline        Boolean             @default(false)
+  lat             Float?
+  lng             Float?
+  h3Cell          String?
+  punctuality     Float               @default(5)
+  smoothness      Float               @default(5)
+  ambianceFit     Float               @default(5)
+  safety          Float               @default(5)
+  cleanliness     Float               @default(5)
+  conversation    Float               @default(5)
 }
 
 model MovementLog {
@@ -191,6 +204,46 @@ model Movement {
   updatedAt        DateTime       @updatedAt
   stops            MovementStop[]
   rating           MovementRating?
+  chatMessages     TripChatMessage[]
+  events           MovementEvent[]
+}
+
+model TripChatMessage {
+  id         String   @id @default(cuid())
+  movementId String
+  movement   Movement @relation(fields: [movementId], references: [id], onDelete: Cascade)
+  senderId   String
+  sender     User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  senderRole String
+  senderName String
+  body       String
+  createdAt  DateTime @default(now())
+
+  @@index([movementId, createdAt])
+}
+
+model MovementEvent {
+  id         String   @id @default(cuid())
+  movementId String
+  movement   Movement @relation(fields: [movementId], references: [id], onDelete: Cascade)
+  type       String
+  payload    String?
+  createdAt  DateTime @default(now())
+
+  @@index([movementId, createdAt])
+}
+
+model DevicePushToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String
+  platform  String   @default("web")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, token])
+  @@index([userId])
 }
 
 model MovementStop {

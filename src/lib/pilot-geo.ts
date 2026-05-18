@@ -52,7 +52,12 @@ export async function findNearbyPilots(
   const busyIds = new Set(busy.map((m) => m.pilotId!));
 
   const online = await prisma.pilotProfile.findMany({
-    where: { isOnline: true, lat: { not: null }, lng: { not: null } },
+    where: {
+      isOnline: true,
+      approvalStatus: "APPROVED",
+      lat: { not: null },
+      lng: { not: null },
+    },
     include: { user: { select: { id: true, name: true } } },
   });
 

@@ -30,6 +30,11 @@ export async function GET() {
     vehicleType: profile.vehicleType,
     transportMode: profile.transportMode,
     avatarEnergy: profile.avatarEnergy,
+    licensePlate: profile.licensePlate ?? "",
+    licenseNumber: profile.licenseNumber ?? "",
+    vehicleColor: profile.vehicleColor ?? "",
+    approvalStatus: profile.approvalStatus,
+    onboardingNotes: profile.onboardingNotes ?? "",
     auraScore: profile.auraScore,
     punctuality: profile.punctuality,
     smoothness: profile.smoothness,
@@ -49,8 +54,17 @@ export async function PATCH(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { name, vehicleType, transportMode, avatarEnergy, isOnline, serviceTiers } =
-    body;
+  const {
+    name,
+    vehicleType,
+    transportMode,
+    avatarEnergy,
+    isOnline,
+    serviceTiers,
+    licensePlate,
+    licenseNumber,
+    vehicleColor,
+  } = body;
 
   if (typeof name === "string" && name.trim()) {
     await prisma.user.update({
@@ -64,6 +78,17 @@ export async function PATCH(req: NextRequest) {
       ? serializePilotServiceTiers(serviceTiers as CarServiceTier[])
       : undefined;
 
+  const existing = await prisma.pilotProfile.findUnique({
+    where: { userId: session.user.id },
+  });
+
+  const onboardingComplete =
+    typeof licensePlate === "string" &&
+    licensePlate.trim() &&
+    typeof licenseNumber === "string" &&
+    licenseNumber.trim() &&
+    (typeof vehicleType === "string" ? vehicleType : existing?.vehicleType);
+
   await prisma.pilotProfile.upsert({
     where: { userId: session.user.id },
     create: {
@@ -72,6 +97,10 @@ export async function PATCH(req: NextRequest) {
       transportMode: (transportMode as TransportMode) ?? "CAR",
       avatarEnergy: avatarEnergy ?? "calm",
       isOnline: typeof isOnline === "boolean" ? isOnline : false,
+      licensePlate: licensePlate?.trim() || null,
+      licenseNumber: licenseNumber?.trim() || null,
+      vehicleColor: vehicleColor?.trim() || null,
+      approvalStatus: onboardingComplete ? "PENDING" : "PENDING",
     },
     update: {
       ...(typeof vehicleType === "string" && { vehicleType }),
@@ -79,6 +108,20 @@ export async function PATCH(req: NextRequest) {
       ...(typeof avatarEnergy === "string" && { avatarEnergy }),
       ...(typeof isOnline === "boolean" && { isOnline }),
       ...(tiersJson != null && { serviceTiers: tiersJson }),
+      ...(typeof licensePlate === "string" && {
+        licensePlate: licensePlate.trim() || null,
+      }),
+      ...(typeof licenseNumber === "string" && {
+        licenseNumber: licenseNumber.trim() || null,
+      }),
+      ...(typeof vehicleColor === "string" && {
+        vehicleColor: vehicleColor.trim() || null,
+      }),
+      ...(onboardingComplete &&
+        existing?.approvalStatus === "PENDING" && {
+          approvalStatus: "PENDING",
+          onboardingNotes: "En revision — datos enviados",
+        }),
     },
   });
 

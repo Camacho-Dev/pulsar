@@ -2,6 +2,7 @@ import type { TransportMode } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { findNearbyPilots } from "@/lib/pilot-geo";
 import { emitMovementOffer, emitMatching } from "@/lib/socket-server";
+import { sendPushToUser } from "@/lib/push-notifications";
 
 const OFFER_MS = 12_000;
 const MAX_ROUNDS = 5;
@@ -87,6 +88,12 @@ async function offerToPilots(
     emitMovementOffer(pilot.userId, {
       ...movement,
       distanceKm: pilot.distanceKm,
+    });
+
+    void sendPushToUser(pilot.userId, {
+      title: "Nuevo viaje disponible",
+      body: `Solicitud cerca (${Math.round((pilot.distanceKm ?? 0) * 10) / 10} km)`,
+      data: { movementId, type: "offer" },
     });
 
     await sleep(OFFER_MS);

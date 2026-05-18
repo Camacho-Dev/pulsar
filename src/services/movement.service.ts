@@ -7,6 +7,8 @@ import {
   emitMatching,
   emitEtaUpdate,
 } from "@/lib/socket-server";
+import { logMovementEvent } from "@/lib/movement-events";
+import { notifyMovementStatus } from "@/lib/push-notifications";
 import { startMatching } from "@/services/matching.service";
 import { tryAttachSharedFlow } from "@/services/shared-flow.service";
 import {
@@ -80,6 +82,11 @@ export async function createMovement(input: CreateMovementInput) {
       include: movementInclude,
     })) ?? movement;
 
+  await logMovementEvent(updated.id, "CREATED", {
+    transportMode: updated.transportMode,
+    serviceTier: updated.serviceTier,
+  });
+
   try {
     void startMatching(updated.id);
     emitMatching(input.moverId, {
@@ -138,6 +145,13 @@ export async function getActiveMovementForMover(moverId: string) {
 }
 
 export async function pilotAcceptMovement(movementId: string, pilotId: string) {
+  const pilotProfile = await prisma.pilotProfile.findUnique({
+    where: { userId: pilotId },
+  });
+  if (pilotProfile?.approvalStatus !== "APPROVED") {
+    throw new Error("Completa tu registro de conductor y espera aprobacion.");
+  }
+
   const open = await prisma.movement.findFirst({
     where: { id: movementId, status: "SEARCHING_PILOT" },
   });
@@ -163,6 +177,15 @@ export async function pilotAcceptMovement(movementId: string, pilotId: string) {
   });
   emitEtaUpdate(movement.moverId, movementId, pickupEta, "pickup");
 
+  await logMovementEvent(movementId, "PILOT_ASSIGNED", { pilotId });
+  void notifyMovementStatus(
+    movementId,
+    movement.moverId,
+    pilotId,
+    "PILOT_ASSIGNED",
+    { pilotName: movement.pilot?.name ?? undefined }
+  );
+
   return movement;
 }
 
@@ -182,6 +205,14 @@ export async function pilotSetArriving(movementId: string, pilotId: string) {
       message: `${m.pilot?.name ?? "Tu conductor"} va en camino al punto de recogida.`,
       etaMin: m.etaMin ?? 5,
     });
+    await logMovementEvent(movementId, "PILOT_ARRIVING", { pilotId });
+    void notifyMovementStatus(
+      movementId,
+      m.moverId,
+      pilotId,
+      "PILOT_ARRIVING",
+      { pilotName: m.pilot?.name ?? undefined }
+    );
   }
   return m;
 }
@@ -217,6 +248,7 @@ export async function pilotNotifyAtPickup(movementId: string, pilotId: string) {
     etaMin: 0,
   });
 
+  await logMovementEvent(movementId, "AT_PICKUP", { pilotId });
   return updated;
 }
 
@@ -231,7 +263,16 @@ export async function startMovement(movementId: string, pilotId: string) {
   });
   if (!movement.count) return null;
   const m = await getMovement(movementId);
-  if (m) emitMovementUpdate(m.moverId, m);
+  if (m) {
+    emitMovementUpdate(m.moverId, m);
+    await logMovementEvent(movementId, "IN_PROGRESS", { pilotId });
+    void notifyMovementStatus(
+      movementId,
+      m.moverId,
+      pilotId,
+      "IN_PROGRESS"
+    );
+  }
   return m;
 }
 
@@ -242,7 +283,16 @@ export async function completeMovement(movementId: string, pilotId: string) {
   });
   if (!movement.count) return null;
   const m = await getMovement(movementId);
-  if (m) emitMovementUpdate(m.moverId, m);
+  if (m) {
+    emitMovementUpdate(m.moverId, m);
+    await logMovementEvent(movementId, "COMPLETED", { pilotId });
+    void notifyMovementStatus(
+      movementId,
+      m.moverId,
+      pilotId,
+      "COMPLETED"
+    );
+  }
   return m;
 }
 
@@ -267,7 +317,16 @@ export async function cancelMovement(
   });
   if (!movement.count) return null;
   const m = await getMovement(movementId);
-  if (m) emitMovementUpdate(m.moverId, m);
+  if (m) {
+    emitMovementUpdate(m.moverId, m);
+    await logMovementEvent(movementId, "CANCELLED", { by: role, userId });
+    void notifyMovementStatus(
+      movementId,
+      m.moverId,
+      m.pilotId,
+      "CANCELLED"
+    );
+  }
   return m;
 }
 

@@ -46,7 +46,7 @@ async function main() {
     },
   });
 
-  await prisma.user.upsert({
+  const pilotUser = await prisma.user.upsert({
     where: { email: "pilot@pulsar.app" },
     update: { passwordHash: hash, name: "Nova Pilot", role: "PILOT" },
     create: {
@@ -58,12 +58,33 @@ async function main() {
         create: {
           avatarEnergy: "vibrant",
           vehicleType: "Tesla Model 3",
+          licensePlate: "A123456",
+          licenseNumber: "402-0000000-0",
+          vehicleColor: "Blanco",
+          approvalStatus: "APPROVED",
           auraScore: 4.9,
           isOnline: true,
           lat: 18.48,
           lng: -69.93,
         },
       },
+    },
+  });
+
+  await prisma.pilotProfile.upsert({
+    where: { userId: pilotUser.id },
+    update: {
+      licensePlate: "A123456",
+      licenseNumber: "402-0000000-0",
+      vehicleColor: "Blanco",
+      approvalStatus: "APPROVED",
+    },
+    create: {
+      userId: pilotUser.id,
+      licensePlate: "A123456",
+      licenseNumber: "402-0000000-0",
+      vehicleColor: "Blanco",
+      approvalStatus: "APPROVED",
     },
   });
 

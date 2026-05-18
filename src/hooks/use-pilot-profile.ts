@@ -10,6 +10,11 @@ export type PilotProfile = {
   vehicleType: string;
   transportMode: TransportMode;
   avatarEnergy: string;
+  licensePlate: string;
+  licenseNumber: string;
+  vehicleColor: string;
+  approvalStatus: "PENDING" | "APPROVED" | "REJECTED";
+  onboardingNotes: string;
   auraScore: number;
   punctuality: number;
   smoothness: number;

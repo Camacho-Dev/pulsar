@@ -27,6 +27,11 @@ jobs:
         env:
           DATABASE_URL: file:./prisma/ci.db
 
+      - name: Tests
+        run: npm test
+        env:
+          DATABASE_URL: file:./prisma/ci.db
+
       - name: Build Next.js
         run: npm run build
         env:

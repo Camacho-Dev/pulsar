@@ -3,7 +3,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { Ambiance, TransportMode } from "@prisma/client";
 import { CreditCard, Loader2, Wallet, X } from "lucide-react";
-import { estimateTripFare, formatFare } from "@/lib/trip-pricing";
+import { formatFare } from "@/lib/trip-pricing";
+import type { SurgeBreakdown } from "@/lib/surge-pricing";
 import { carServiceLabel, type CarServiceTier } from "@/lib/car-services";
 import { TRANSPORT_LABELS } from "@/lib/copy";
 import { CardPaymentForm } from "@/components/pulsar/card-payment-form";
@@ -88,6 +89,8 @@ export function TripCheckoutSheet({
   const [distanceKm, setDistanceKm] = useState(0);
   const [durationMin, setDurationMin] = useState(0);
   const [fare, setFare] = useState(0);
+  const [baseFare, setBaseFare] = useState(0);
+  const [surge, setSurge] = useState<SurgeBreakdown | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CARD");
   const [cardSaved, setCardSaved] = useState(false);
 
@@ -112,7 +115,11 @@ export function TripCheckoutSheet({
       fromLng: String(target.fromLng),
       toLat: String(target.toLat),
       toLng: String(target.toLng),
+      transportMode,
     });
+    if (transportMode === "CAR" && carService) {
+      params.set("serviceTier", carService);
+    }
 
     fetch(`/api/maps/directions?${params}`)
       .then((r) => (r.ok ? r.json() : null))
@@ -126,14 +133,9 @@ export function TripCheckoutSheet({
         const min = route.durationMin ?? 0;
         setDistanceKm(km);
         setDurationMin(min);
-        setFare(
-          estimateTripFare(
-            km,
-            min,
-            transportMode,
-            transportMode === "CAR" ? carService : null
-          )
-        );
+        setFare(route.fare ?? 0);
+        setBaseFare(route.baseFare ?? route.fare ?? 0);
+        setSurge(route.surge ?? null);
       })
       .catch(() => {
         if (!cancelled) setQuoteError("Error al obtener el precio.");
@@ -230,6 +232,11 @@ export function TripCheckoutSheet({
             <>
               <p className="text-xs text-zinc-500">Precio estimado</p>
               <p className="text-3xl font-bold text-white">{formatFare(fare)}</p>
+              {surge && surge.surgePercent > 0 && (
+                <p className="mt-1 text-xs text-amber-300">
+                  {surge.label} · base {formatFare(baseFare)}
+                </p>
+              )}
               <p className="mt-1 text-xs text-zinc-500">
                 ~{durationMin} min · {distanceKm.toFixed(1)} km
               </p>
