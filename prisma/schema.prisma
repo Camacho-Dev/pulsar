@@ -1,0 +1,233 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum UserRole {
+  MOVER
+  PILOT
+}
+
+enum Ambiance {
+  SILENT
+  LOFI
+  NETWORKING
+  BUSINESS
+  ENERGY
+  GAMER
+}
+
+enum TransportMode {
+  CAR
+  MOTO
+  METRO
+  SCOOTER
+  BIKE
+  SHARED_VAN
+}
+
+enum MovementStatus {
+  SEARCHING_PILOT
+  PILOT_ASSIGNED
+  PILOT_ARRIVING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ZoneType {
+  TRAFFIC
+  SAFE
+  PREMIUM
+  EVENT
+  FLOW
+}
+
+enum StopType {
+  PICKUP_FRIEND
+  DETOUR
+  NEW_DEST
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         UserRole @default(MOVER)
+  createdAt    DateTime @default(now())
+
+  moverProfile MoverProfile?
+  pilotProfile PilotProfile?
+  movementLogs MovementLog[]
+  routines     Routine[]
+  movements    Movement[]        @relation("MoverMovements")
+  pilotMoves   Movement[]        @relation("PilotMovements")
+  suggestions  PulseSuggestion[]
+  ratingsGiven MovementRating[]  @relation("RatingsGiven")
+}
+
+model MoverProfile {
+  userId              String   @id
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  preferredAmbiance   Ambiance @default(SILENT)
+  tempPreference      Int      @default(22)
+  musicNote           String?
+  drivingStyle        String   @default("smooth")
+  autoPulseEnabled    Boolean  @default(true)
+}
+
+model PilotProfile {
+  userId       String  @id
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  avatarEnergy String  @default("calm")
+  vehicleType  String  @default("Sedán")
+  transportMode TransportMode @default(CAR)
+  /** JSON array de tiers CAR que ofrece: PULSAR, CONFORT, SELECT, BLACK */
+  serviceTiers String  @default("[\"PULSAR\",\"CONFORT\",\"SELECT\",\"BLACK\"]")
+  auraScore    Float   @default(4.5)
+  isOnline     Boolean @default(false)
+  lat          Float?
+  lng          Float?
+  h3Cell       String?
+  punctuality  Float   @default(5)
+  smoothness   Float   @default(5)
+  ambianceFit  Float   @default(5)
+  safety       Float   @default(5)
+  cleanliness  Float   @default(5)
+  conversation Float   @default(5)
+}
+
+model MovementLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lat       Float
+  lng       Float
+  address   String?
+  h3Cell    String?
+  visitedAt DateTime @default(now())
+  dayOfWeek Int
+  hourOfDay Int
+
+  @@index([userId, visitedAt])
+}
+
+model Routine {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label         String
+  lat           Float
+  lng           Float
+  address       String
+  dayOfWeek     Int
+  hourStart     Int
+  hourEnd       Int
+  confidence    Float    @default(0.6)
+  enabled       Boolean  @default(false)
+  userScheduled Boolean  @default(false)
+  lastSeenAt    DateTime @default(now())
+
+  @@index([userId, dayOfWeek])
+}
+
+model PulseSuggestion {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  routineId  String?
+  title      String
+  message    String
+  toLat      Float
+  toLng      Float
+  toAddress  String
+  ambiance   Ambiance
+  etaMin     Int      @default(5)
+  status     String   @default("pending")
+  validUntil DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([userId, status])
+}
+
+model SharedFlow {
+  id           String   @id @default(cuid())
+  label        String
+  h3Cell       String
+  status       String   @default("forming")
+  maxMovers    Int      @default(4)
+  departureMin DateTime
+  createdAt    DateTime @default(now())
+  movements    Movement[]
+}
+
+model Movement {
+  id               String         @id @default(cuid())
+  moverId          String
+  mover            User           @relation("MoverMovements", fields: [moverId], references: [id])
+  pilotId          String?
+  pilot            User?          @relation("PilotMovements", fields: [pilotId], references: [id])
+  sharedFlowId     String?
+  sharedFlow       SharedFlow?    @relation(fields: [sharedFlowId], references: [id])
+  status           MovementStatus @default(SEARCHING_PILOT)
+  ambiance         Ambiance
+  transportMode    TransportMode  @default(CAR)
+  serviceTier      String?
+  fromAddress      String
+  toAddress        String
+  fromLat          Float
+  fromLng          Float
+  toLat            Float
+  toLng            Float
+  etaMin           Int?
+  suggestedByPulse Boolean        @default(false)
+  h3Origin         String?
+  h3Dest           String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  stops            MovementStop[]
+  rating           MovementRating?
+}
+
+model MovementStop {
+  id         String   @id @default(cuid())
+  movementId String
+  movement   Movement @relation(fields: [movementId], references: [id], onDelete: Cascade)
+  type       StopType
+  address    String
+  lat        Float
+  lng        Float
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+}
+
+model MovementRating {
+  id           String   @id @default(cuid())
+  movementId   String   @unique
+  movement     Movement @relation(fields: [movementId], references: [id], onDelete: Cascade)
+  moverId      String
+  mover        User     @relation("RatingsGiven", fields: [moverId], references: [id])
+  punctuality  Int
+  smoothness   Int
+  safety       Int
+  cleanliness  Int
+  ambiance     Int
+  conversation Int
+  comment      String?
+  createdAt    DateTime @default(now())
+}
+
+model LiveZone {
+  id          String    @id @default(cuid())
+  name        String
+  type        ZoneType
+  lat         Float
+  lng         Float
+  radiusKm    Float     @default(0.4)
+  intensity   Float     @default(0.7)
+  activeUntil DateTime?
+}

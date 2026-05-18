@@ -1,0 +1,45 @@
+import { NextResponse } from "next/server";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
+import { fareForMovement } from "@/lib/movement-fare";
+
+export async function GET() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const movements = await prisma.movement.findMany({
+    where: { pilotId: session.user.id },
+    orderBy: { createdAt: "desc" },
+    take: 40,
+    select: {
+      id: true,
+      status: true,
+      fromAddress: true,
+      toAddress: true,
+      fromLat: true,
+      fromLng: true,
+      toLat: true,
+      toLng: true,
+      createdAt: true,
+      etaMin: true,
+      transportMode: true,
+      serviceTier: true,
+      ambiance: true,
+      mover: { select: { name: true } },
+    },
+  });
+
+  return NextResponse.json(
+    movements.map((m) => {
+      const fare = fareForMovement(m);
+      return {
+        ...m,
+        fareEstimate: fare,
+        pilotEarnings:
+          m.status === "COMPLETED" ? Math.round(fare * 0.8) : null,
+      };
+    })
+  );
+}

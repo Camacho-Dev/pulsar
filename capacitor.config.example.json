@@ -1,0 +1,18 @@
+{
+  "appId": "com.pulsar.mobility",
+  "appName": "Pulsar",
+  "webDir": "out",
+  "server": {
+    "androidScheme": "https",
+    "url": "https://TU-SERVICIO.onrender.com",
+    "cleartext": false,
+    "allowNavigation": [
+      "https://TU-SERVICIO.onrender.com",
+      "https://api.mapbox.com",
+      "https://*.mapbox.com"
+    ]
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

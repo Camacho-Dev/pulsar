@@ -32,6 +32,15 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# sqlite local
+/prisma/*.db
+/prisma/*.db-journal
+
+# capacitor / android local
+/android
+capacitor.config.json
 
 # vercel
 .vercel

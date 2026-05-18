@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.github
+.env*
+!.env.example
+prisma/dev.db
+prisma/*.db-journal
+*.md
+!DEPLOY.md
+android
+.idea
+coverage
+.DS_Store

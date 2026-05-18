@@ -1,0 +1,35 @@
+# Blueprint Render: conecta el repo de GitHub y queda online con cada push a main.
+# Dashboard: https://dashboard.render.com → New → Blueprint → este archivo
+
+services:
+  - type: web
+    name: pulsar
+    runtime: docker
+    plan: free
+    region: ohio
+    branch: main
+    healthCheckPath: /login
+    autoDeploy: true
+    disk:
+      name: pulsar-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: "3000"
+      - key: DATABASE_URL
+        value: file:/data/pulsar.db
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: AUTH_URL
+        sync: false
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
+      - key: NEXT_PUBLIC_MAPBOX_TOKEN
+        sync: false
+      - key: OPENROUTESERVICE_API_KEY
+        sync: false
