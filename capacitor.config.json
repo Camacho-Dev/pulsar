@@ -1,18 +1,23 @@
 {
   "appId": "com.pulsar.mobility",
   "appName": "Pulsar",
-  "webDir": "out",
+  "webDir": "public",
   "server": {
     "androidScheme": "https",
     "url": "https://pulsar-02hp.onrender.com",
     "cleartext": false,
+    "hostname": "pulsar-02hp.onrender.com",
     "allowNavigation": [
       "https://pulsar-02hp.onrender.com",
+      "https://*.onrender.com",
       "https://api.mapbox.com",
-      "https://*.mapbox.com"
+      "https://*.mapbox.com",
+      "https://events.mapbox.com"
     ]
   },
   "android": {
-    "allowMixedContent": false
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true
   }
 }

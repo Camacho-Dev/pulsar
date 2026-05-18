@@ -11,7 +11,9 @@
     "lint": "eslint",
     "db:push": "prisma db push",
     "db:seed": "npx tsx prisma/seed.ts",
-    "db:setup": "prisma db push && npx tsx prisma/seed.ts"
+    "db:setup": "prisma db push && npx tsx prisma/seed.ts",
+    "cap:sync": "npx cap sync android",
+    "cap:open": "npx cap open android"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
@@ -35,7 +37,10 @@
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
     "tailwind-merge": "^3.6.0",
-    "tsx": "^4.22.1"
+    "tsx": "^4.22.1",
+    "@capacitor/android": "^8.1.0",
+    "@capacitor/cli": "^8.1.0",
+    "@capacitor/core": "^8.1.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

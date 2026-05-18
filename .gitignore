@@ -39,9 +39,8 @@ yarn-error.log*
 /prisma/*.db-journal
 /data/
 
-# capacitor / android local
+# capacitor / android local (generado por cap add android)
 /android
-capacitor.config.json
 
 # vercel
 .vercel
