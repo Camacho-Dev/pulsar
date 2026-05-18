@@ -18,7 +18,7 @@ Abre [http://localhost:3000](http://localhost:3000).
 
 | | Impostor Dominicano | Pulsar |
 |---|---------------------|--------|
-| Repo | `Camacho-Dev/impostor-dominicano` | `Camacho-Dev/pulsar` (crear y subir) |
+| Repo | `Camacho-Dev/impostor-dominicano` | `Camacho-Dev/pulsar` |
 | Hosting | GitHub Pages (estático) | Render (Node + SQLite) |
 | Auto-deploy | push a `main` → Actions | push a `main` → Render |
 | APK | Capacitor → URL de Pages | Capacitor → URL de Render |
